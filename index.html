@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TurnoMaper</title>
+
+<!-- Manifest para PWA -->
+<link rel="manifest" href="./manifest.json">
+
+<!-- Iconos -->
+<link rel="icon" type="image/png" href="assets/favicon.png">
+
+<!-- Estilos generales -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ------------------------- */
+/* 🎨 MOBILE FIRST           */
+/* ------------------------- */
+
+:root {
+  --bg: #e6f0fa;
+  --card: #ffffff;
+  --accent: #1e5bb8;
+  --muted: #5a7291;
+  --radius: 12px;
+  --shadow: 0 8px 20px rgba(30,91,184,0.15);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', Arial, sans-serif;
+  margin: 0;
+  background: var(--bg);
+  padding: 12px;
+  color: #16322b;
+}
+
+/* CONTENEDOR PRINCIPAL */
+.wrapper {
+  max-width: 480px;   /* 📌 ahora es móvil primero */
+  margin: 0 auto;
+}
+
+/* HEADER */
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+header img {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+}
+
+h1 {
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+/* TARJETA */
+.card {
+  background: var(--card);
+  padding: 16px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* GRID PARA MÓVIL: 1 COLUMNA */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+/* DESKTOP: 2 COLUMNAS */
+@media (min-width: 700px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .full {
+    grid-column: 1 / -1;
+  }
+}
+
+label {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+  display: block;
+}
+
+select, input[type="date"], input[type="text"], .readonly {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #d6dfe8;
+  font-size: 1rem;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn.secondary {
+  background: #e8eef5;
+  color: #1e3a5f;
+}
+
+.small {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
+#msg {
+  color: #b00;
+  font-size: 0.9rem;
+}
+
+/* Modal */
+.modal-back {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.2s;
+}
+
+.modal-back.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  background: #fff;
+  width: 92%;
+  max-width: 420px;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #e6faf0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 5px solid var(--accent);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: 0.3s;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+<header>
+  <img src="assets/icon-192.png" alt="app icon">
+  <div>
+    <h1>Registro de Turnos</h1>
+    <div class="muted">TurnoMaper</div>
+  </div>
+</header>
+
+<div class="card">
+<div class="grid">
+
+  <div>
+    <label for="usuario">Usuario</label>
+    <select id="usuario">
+      <option value="">— Seleccione —</option>
+    </select>
+  </div>
+
+  <div>
+    <label for="services">Servicios</label>
+    <select id="services">
+      <option value="">— Seleccione combinación —</option>
+    </select>
+  </div>
+
+  <div>
+    <label>Empresa</label>
+    <input id="empresa" class="readonly" readonly />
+  </div>
+
+  <div>
+    <label>Sede</label>
+    <input id="sede" class="readonly" readonly />
+  </div>
+
+  <div>
+    <label>Tiempo turno (hrs)</label>
+    <input id="tiempoTurno" class="readonly" readonly />
+  </div>
+
+  <div>
+    <label>Fecha inicio</label>
+    <input type="date" id="fechaInicio" />
+  </div>
+
+  <div>
+    <label>Hora inicio</label>
+    <div style="display:flex;gap:8px">
+      <input id="horaInicio" readonly class="readonly"/>
+      <button id="fijarInicio" class="btn secondary small">Fijar</button>
+    </div>
+  </div>
+
+  <div>
+    <label>Fecha fin</label>
+    <input type="date" id="fechaFin" />
+  </div>
+
+  <div>
+    <label>Hora fin</label>
+    <div style="display:flex;gap:8px">
+      <input id="horaFin" readonly class="readonly"/>
+      <button id="cerrarTurnoBtn" class="btn secondary small">Cerrar</button>
+    </div>
+  </div>
+
+  <div class="full">
+    <label>Total horas</label>
+    <input id="totalHoras" readonly class="readonly" />
+  </div>
+
+  <div class="full">
+    <label><input type="checkbox" id="cerradoOk" disabled> Marcar como cerrado</label>
+  </div>
+
+  <div class="full controls">
+    <button id="btnGuardar" class="btn" disabled>Guardar</button>
+    <button id="btnLimpiar" class="btn secondary">Limpiar</button>
+  </div>
+
+  <div class="full">
+    <div id="msg"></div>
+  </div>
+</div>
+</div>
+</div>
+
+<div id="toast" class="toast">Turno guardado</div>
+
+<!-- Modal -->
+<div id="modal" class="modal-back">
+  <div class="modal">
+    <h3>Confirmar turno</h3>
+    <div id="modalContent"></div>
+    <div class="modal-actions">
+      <button id="cancelModal" class="btn secondary">Regresar</button>
+      <button id="confirmModal" class="btn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tu script original (sin tocar lógica) -->
+<script>
+let allServices=[], currentService=null, horaInicioFrozen=null, horaFinFrozen=null;
+
+const usuarioEl=document.getElementById('usuario');
+const servicesEl=document.getElementById('services');
+const empresaEl=document.getElementById('empresa');
+const sedeEl=document.getElementById('sede');
+const tiempoEl=document.getElementById('tiempoTurno');
+const fechaInicioEl=document.getElementById('fechaInicio');
+const horaInicioEl=document.getElementById('horaInicio');
+const fijarInicioBtn=document.getElementById('fijarInicio');
+const fechaFinEl=document.getElementById('fechaFin');
+const horaFinEl=document.getElementById('horaFin');
+const cerrarTurnoBtn=document.getElementById('cerrarTurnoBtn');
+const totalHorasEl=document.getElementById('totalHoras');
+const cerradoOkEl=document.getElementById('cerradoOk');
+const btnGuardar=document.getElementById('btnGuardar');
+const btnLimpiar=document.getElementById('btnLimpiar');
+const msgEl=document.getElementById('msg');
+const toast=document.getElementById('toast');
+const modal=document.getElementById('modal');
+const modalContent=document.getElementById('modalContent');
+const cancelModal=document.getElementById('cancelModal');
+const confirmModal=document.getElementById('confirmModal');
+
+// URL del WebApp publicado
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwExw4dQQvL0stcExL4ekK7DjaHlBSaD_9V2Gr8TfFtjm01xix5h27pVMuWqTiceNyX/exec";
+
+function init(){
+  // Si estamos en Apps Script → usar google.script.run
+  if (typeof google !== "undefined") {
+    google.script.run.withSuccessHandler(data=>{
+      allServices=data.services||[];
+      populateUsuarios(data.usuarios||[]);
+      populateServices(allServices);
+    }).obtenerOpciones();
+  } else {
+    // Si estamos en GitHub → usar fetch al WebApp
+    fetch(WEBAPP_URL + "?action=obtenerOpciones")
+      .then(res=>res.json())
+      .then(data=>{
+        allServices=data.services||[];
+        populateUsuarios(data.usuarios||[]);
+        populateServices(allServices);
+      })
+      .catch(err=>console.error("Error cargando opciones:", err));
+  }
+}
+
+function populateUsuarios(usuarios){
+  usuarioEl.innerHTML='<option value="">— Seleccione —</option>';
+  usuarios.forEach(u=>{
+    const o=document.createElement('option');
+    o.value=u;
+    o.textContent=u;
+    usuarioEl.appendChild(o);
+  });
+}
+
+function populateServices(services){
+  servicesEl.innerHTML='<option value="">— Seleccione combinación —</option>';
+  services.forEach((s,idx)=>{
+    const o=document.createElement('option');
+    o.value=idx;
+    o.textContent=`${s.empresa} — ${s.sede} — ${s.tiempoTurno}h`;
+    servicesEl.appendChild(o);
+  });
+  servicesEl.matches=services;
+  servicesEl.disabled=false;
+}
+
+usuarioEl.addEventListener('change', ()=>{
+  resetFields();
+  cerradoOkEl.checked=false;
+  cerradoOkEl.disabled=true;
+  msgEl.textContent='';
+  checkFormState();
+});
+
+servicesEl.addEventListener('change', ()=>{
+  const idx=Number(servicesEl.value);
+  if(isNaN(idx)||idx<0){
+    currentService=null; 
+    resetFields();
+  } else {
+    const s=servicesEl.matches[idx];
+    currentService=s;
+    empresaEl.value=s.empresa;
+    sedeEl.value=s.sede;
+    tiempoEl.value=s.tiempoTurno;
+  }
+  checkFormState();
+});
+
+fijarInicioBtn.addEventListener('click', ()=>{
+  if(!fechaInicioEl.value){alert('Selecciona fecha inicio');return;}
+  horaInicioFrozen=new Date();
+  horaInicioEl.value=formatTime(horaInicioFrozen);
+});
+
+cerrarTurnoBtn.addEventListener('click', ()=>{
+  if(!fechaFinEl.value){alert('Selecciona fecha fin');return;}
+  if(!horaInicioFrozen){alert('Fija hora inicio primero');return;}
+  
+  horaFinFrozen=new Date();
+  horaFinEl.value=formatTime(horaFinFrozen);
+
+  calcularTotal();
+
+  const minHoras = Number(tiempoEl.value);
+  if(Number(totalHorasEl.value) < minHoras){
+    msgEl.textContent=`No se puede cerrar turno: mínimo ${minHoras}h requeridas`;
+    cerradoOkEl.checked=false;
+    cerradoOkEl.disabled=true;
+    return;
+  }
+
+  msgEl.textContent='';
+  cerradoOkEl.disabled=false;
+});
+
+cerradoOkEl.addEventListener('change', checkFormState);
+
+function calcularTotal(){
+  if(!horaInicioFrozen||!horaFinFrozen||!fechaInicioEl.value||!fechaFinEl.value){
+    totalHorasEl.value="";
+    return;
+  }
+
+  const start = new Date(fechaInicioEl.value + "T" + formatTime(horaInicioFrozen));
+  const end   = new Date(fechaFinEl.value   + "T" + formatTime(horaFinFrozen));
+
+  const diffMs = end - start;
+  if(diffMs < 0){
+    totalHorasEl.value='';
+    msgEl.textContent='La fecha final es anterior a la de inicio';
+    return;
+  }
+
+  totalHorasEl.value = (diffMs / 3600000).toFixed(2);
+}
+
+function formatTime(d){
+  return pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+
+function pad(n){return String(n).padStart(2,'0');}
+
+btnLimpiar.addEventListener('click', resetFormFields);
+
+function resetFormFields(){
+  usuarioEl.value='';
+  currentService=null;
+  resetFields();
+  cerradoOkEl.checked=false;
+  cerradoOkEl.disabled=true;
+  msgEl.textContent='';
+  checkFormState();
+}
+
+function resetFields(){
+  empresaEl.value='';
+  sedeEl.value='';
+  tiempoEl.value='';
+  fechaInicioEl.value='';
+  fechaFinEl.value='';
+  horaInicioEl.value='';
+  horaFinEl.value='';
+  totalHorasEl.value='';
+  horaInicioFrozen=null;
+  horaFinFrozen=null;
+}
+
+function checkFormState(){
+  const validUser=!!usuarioEl.value;
+  const validService=!!currentService;
+  const validTimes=!!horaInicioEl.value && !!horaFinEl.value;
+  btnGuardar.disabled=!(validUser && validService && validTimes && cerradoOkEl.checked);
+}
+
+btnGuardar.addEventListener('click', ()=>{
+  if(!usuarioEl.value || !currentService){
+    alert('Selecciona usuario y servicio');
+    return;
+  }
+
+  modalContent.innerHTML = `
+    <div><strong>Usuario:</strong> ${usuarioEl.value}</div>
+    <div><strong>Empresa:</strong> ${empresaEl.value}</div>
+    <div><strong>Sede:</strong> ${sedeEl.value}</div>
+    <div><strong>Horas requeridas:</strong> ${tiempoEl.value}h</div>
+    <div><strong>Fecha inicio:</strong> ${fechaInicioEl.value} ${horaInicioEl.value}</div>
+    <div><strong>Fecha fin:</strong> ${fechaFinEl.value} ${horaFinEl.value}</div>
+    <div><strong>Total horas:</strong> ${totalHorasEl.value}</div>
+  `;
+  modal.classList.add('show');
+});
+
+cancelModal.addEventListener('click', ()=> modal.classList.remove('show'));
+
+confirmModal.addEventListener('click', ()=>{
+  modal.classList.remove('show');
+
+  const payload={
+    action:"guardarTurno",
+    usuario:usuarioEl.value,
+    empresa:empresaEl.value,
+    sede:sedeEl.value,
+    tiempoTurno:tiempoEl.value,
+    fechaInicio:fechaInicioEl.value,
+    horaInicio:horaInicioEl.value,
+    fechaFin:fechaFinEl.value,
+    horaFin:horaFinEl.value,
+    totalHoras:totalHorasEl.value,
+    cerradoOk:cerradoOkEl.checked,
+    lat:null,
+    lng:null,
+    note:""
+  };
+
+  // Apps Script o GitHub
+  if (typeof google !== "undefined") {
+    google.script.run.withSuccessHandler(res=>{
+      if(res.status==='ok'){ showToast(); resetFormFields(); }
+      else msgEl.textContent='Error guardando';
+    }).guardarTurno(payload);
+  } else {
+    fetch(WEBAPP_URL, {
+      method:"POST",
+      body:JSON.stringify(payload),
+      headers:{"Content-Type":"application/json"}
+    })
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status==='ok'){ showToast(); resetFormFields(); }
+      else msgEl.textContent='Error guardando';
+    })
+    .catch(()=> msgEl.textContent='Error guardando');
+  }
+});
+
+function showToast(){
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'),2500);
+}
+
+window.addEventListener('load', init);
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./serviceWorkers.js")
+    .catch(err => console.log("SW error:", err));
+}
+</script>
+</body>
+</html>
